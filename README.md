@@ -56,6 +56,12 @@ python -m repomap.cli ~/src/awesome-app -o docs/MAP.md
 Skips `.git`, `node_modules`, `__pycache__`, virtualenvs. No network, no
 third-party deps.
 
+## Use cases
+
+- Speed up onboarding of new AI coding agents
+- Generate a reference doc for contributors
+- Spot entry points and public exports before a refactor
+
 ## License
 
 [MIT](LICENSE)
