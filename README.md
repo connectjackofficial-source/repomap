@@ -30,6 +30,9 @@ python -m repomap.cli .
 
 # write somewhere else
 python -m repomap.cli ~/src/awesome-app -o docs/MAP.md
+
+# skip extra directories
+python -m repomap.cli . --ignore generated temp
 ```
 
 ## Example output
