@@ -90,11 +90,13 @@ PARSERS = {".py": parse_python, ".js": parse_js, ".ts": parse_js,
            ".jsx": parse_js, ".tsx": parse_js}
 
 
-def scan(root: str | Path, max_files: int = 400) -> list[FileMap]:
+def scan(root: str | Path, max_files: int = 400,
+         extra_ignore: Optional[list] = None) -> list[FileMap]:
     root = Path(root).resolve()
+    ignore = IGNORE_DIRS | set(extra_ignore or [])
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS]
+        dirnames[:] = [d for d in dirnames if d not in ignore]
         for fn in filenames:
             ext = os.path.splitext(fn)[1]
             parser = PARSERS.get(ext)
