@@ -14,10 +14,12 @@ def main():
                     help="output file (default: CONTEXT.md)")
     ap.add_argument("-q", "--quiet", action="store_true",
                     help="suppress summary output")
+    ap.add_argument("--ignore", nargs="*", default=[],
+                    help="extra directories to skip")
     args = ap.parse_args()
 
     root = Path(args.root)
-    files = scan(root)
+    files = scan(root, extra_ignore=args.ignore)
     out = render(files, root_name=root.resolve().name)
     Path(args.output).write_text(out, encoding="utf-8")
     if not args.quiet:
