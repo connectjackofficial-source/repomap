@@ -33,6 +33,12 @@ python -m repomap.cli ~/src/awesome-app -o docs/MAP.md
 
 # skip extra directories
 python -m repomap.cli . --ignore generated temp
+
+# only scan the top two levels
+python -m repomap.cli . --max-depth 2
+
+# machine-readable output for tooling
+python -m repomap.cli . --format json -o context.json
 ```
 
 ## Example output
