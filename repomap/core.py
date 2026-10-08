@@ -91,11 +91,16 @@ PARSERS = {".py": parse_python, ".js": parse_js, ".ts": parse_js,
 
 
 def scan(root: str | Path, max_files: int = 400,
-         extra_ignore: Optional[list] = None) -> list[FileMap]:
+         extra_ignore: Optional[list] = None,
+         max_depth: Optional[int] = None) -> list[FileMap]:
     root = Path(root).resolve()
     ignore = IGNORE_DIRS | set(extra_ignore or [])
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
+        rel_depth = len(Path(dirpath).relative_to(root).parts)
+        if max_depth is not None and rel_depth >= max_depth:
+            dirnames[:] = []
+            continue
         dirnames[:] = [d for d in dirnames if d not in ignore]
         for fn in filenames:
             ext = os.path.splitext(fn)[1]
@@ -132,3 +137,22 @@ def render(files: list[FileMap], root_name: str) -> str:
                 lines.append(f"- {s.signature or s.name}")
         lines.append("")
     return "\n".join(lines)
+
+
+def render_json(files: list[FileMap], root_name: str) -> str:
+    """Machine-readable output: one object per file, symbols as arrays."""
+    import json
+    payload = {
+        "root": root_name,
+        "files": [
+            {
+                "path": fm.path,
+                "symbols": [
+                    {"name": s.name, "kind": s.kind, "line": s.line}
+                    for s in fm.symbols
+                ],
+            }
+            for fm in files
+        ],
+    }
+    return json.dumps(payload, indent=2)
