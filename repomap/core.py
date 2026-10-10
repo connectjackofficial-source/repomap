@@ -130,6 +130,15 @@ def language_stats(files: list[FileMap]) -> dict:
     return dict(sorted(stats.items(), key=lambda kv: -kv[1]["files"]))
 
 
+def hotspots(files: list[FileMap], n: int = 10) -> list:
+    """Rank files by symbol count — the classic refactoring hotspots.
+
+    Returns [(path, symbol_count)] sorted descending.
+    """
+    ranked = sorted(files, key=lambda f: len(f.symbols), reverse=True)
+    return [(fm.path, len(fm.symbols)) for fm in ranked[:n]]
+
+
 def render(files: list[FileMap], root_name: str) -> str:
     total_symbols = sum(len(f.symbols) for f in files)
     lines = [f"# {root_name} - codebase map",
