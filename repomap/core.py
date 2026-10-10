@@ -92,7 +92,8 @@ PARSERS = {".py": parse_python, ".js": parse_js, ".ts": parse_js,
 
 def scan(root: str | Path, max_files: int = 400,
          extra_ignore: Optional[list] = None,
-         max_depth: Optional[int] = None) -> list[FileMap]:
+         max_depth: Optional[int] = None,
+         min_symbols: int = 1) -> list[FileMap]:
     root = Path(root).resolve()
     ignore = IGNORE_DIRS | set(extra_ignore or [])
     out = []
@@ -110,12 +111,23 @@ def scan(root: str | Path, max_files: int = 400,
             p = Path(dirpath) / fn
             rel = p.relative_to(root)
             fm = parser(p)
-            if fm and fm.symbols:
+            if fm and len(fm.symbols) >= min_symbols:
                 fm.path = str(rel).replace("\\", "/")
                 out.append(fm)
             if len(out) >= max_files:
                 return out
     return out
+
+
+def language_stats(files: list[FileMap]) -> dict:
+    """Count files and symbols per language (by extension)."""
+    stats: dict[str, dict] = {}
+    for fm in files:
+        ext = Path(fm.path).suffix or "(none)"
+        entry = stats.setdefault(ext, {"files": 0, "symbols": 0})
+        entry["files"] += 1
+        entry["symbols"] += len(fm.symbols)
+    return dict(sorted(stats.items(), key=lambda kv: -kv[1]["files"]))
 
 
 def render(files: list[FileMap], root_name: str) -> str:
