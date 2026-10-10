@@ -39,6 +39,13 @@ python -m repomap.cli . --max-depth 2
 
 # machine-readable output for tooling
 python -m repomap.cli . --format json -o context.json
+
+# skip files with very few symbols (focus on real modules)
+python -m repomap.cli . --min-symbols 3
+
+# per-language file/symbol counts
+python -m repomap.cli . --stats
+# {"\".py\"": {"files": 12, "symbols": 87}, "\".ts\"": {"files": 4, "symbols": 19}}
 ```
 
 ## Example output
