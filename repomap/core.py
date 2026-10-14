@@ -189,6 +189,31 @@ def file_stats(root: str | Path, max_files: int = 400,
     }
 
 
+def largest_files(root: str | Path, n: int = 10,
+                  extra_ignore: Optional[list] = None) -> list:
+    """Rank the biggest files in a repo by byte size.
+
+    The first place to look when a repo is heavier than it should be —
+    vendored binaries, checked-in datasets, generated logs. Returns
+    [{"path": rel/path, "bytes": size}] sorted descending.
+    """
+    root = Path(root).resolve()
+    ignore = IGNORE_DIRS | set(extra_ignore or [])
+    big: list[tuple[int, str]] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in ignore]
+        for fn in filenames:
+            p = Path(dirpath) / fn
+            try:
+                size = p.stat().st_size
+            except OSError:
+                continue
+            rel = str(p.relative_to(root)).replace("\\", "/")
+            big.append((size, rel))
+    big.sort(reverse=True)
+    return [{"path": rel, "bytes": size} for size, rel in big[:n]]
+
+
 def render(files: list[FileMap], root_name: str) -> str:
     total_symbols = sum(len(f.symbols) for f in files)
     lines = [f"# {root_name} - codebase map",

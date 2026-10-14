@@ -3,8 +3,8 @@ import argparse
 import json
 from pathlib import Path
 
-from .core import (file_stats, hotspots, language_stats, scan, render,
-                   render_json)
+from .core import (file_stats, hotspots, language_stats, largest_files,
+                   scan, render, render_json)
 
 
 def main():
@@ -26,6 +26,8 @@ def main():
                     help="print per-language file/symbol counts")
     ap.add_argument("--file-stats", action="store_true",
                     help="print physical file/line counts by extension")
+    ap.add_argument("--largest", type=int, nargs="?", const=10, default=None,
+                    help="print TOP N biggest files by byte size")
     ap.add_argument("--hotspots", type=int, nargs="?", const=10, default=None,
                     help="print TOP N files by symbol count (refactor targets)")
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown",
@@ -50,6 +52,9 @@ def main():
     if args.file_stats:
         print(json.dumps(file_stats(root, extra_ignore=args.ignore),
                          indent=2))
+    if args.largest is not None:
+        print(json.dumps({"largest": largest_files(
+            root, n=args.largest, extra_ignore=args.ignore)}, indent=2))
 
 
 if __name__ == "__main__":
