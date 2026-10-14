@@ -139,6 +139,56 @@ def hotspots(files: list[FileMap], n: int = 10) -> list:
     return [(fm.path, len(fm.symbols)) for fm in ranked[:n]]
 
 
+def file_stats(root: str | Path, max_files: int = 400,
+               extra_ignore: Optional[list] = None) -> dict:
+    """Aggregate physical file counts and line counts by extension.
+
+    Unlike :func:`scan` (symbol-focused), this counts every file on disk —
+    including files with no parseable symbols — grouped by extension, so a
+    repo's true shape (docs, config, data vs code) shows up.
+
+    Returns {"by_extension": {ext: {"files", "lines"}},
+             "total_files", "total_lines", "top_dirs": [(dir, files)]}.
+    """
+    root = Path(root).resolve()
+    ignore = IGNORE_DIRS | set(extra_ignore or [])
+    by_ext: dict[str, dict] = {}
+    by_dir: dict[str, int] = {}
+    total_files = 0
+    total_lines = 0
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in ignore]
+        rel_dir = Path(dirpath).relative_to(root)
+        for fn in filenames:
+            if fn.startswith("."):
+                continue
+            p = Path(dirpath) / fn
+            ext = p.suffix or "(none)"
+            entry = by_ext.setdefault(ext, {"files": 0, "lines": 0})
+            try:
+                lines = sum(1 for _ in open(p, "rb"))
+            except OSError:
+                lines = 0
+            entry["files"] += 1
+            entry["lines"] += lines
+            total_files += 1
+            total_lines += lines
+            dname = str(rel_dir).replace("\\", "/") or "."
+            by_dir[dname] = by_dir.get(dname, 0) + 1
+            if total_files >= max_files:
+                break
+        if total_files >= max_files:
+            break
+    return {
+        "by_extension": dict(sorted(by_ext.items(),
+                                    key=lambda kv: -kv[1]["files"])),
+        "top_dirs": [d for d, _ in sorted(by_dir.items(),
+                                          key=lambda kv: -kv[1])[:10]],
+        "total_files": total_files,
+        "total_lines": total_lines,
+    }
+
+
 def render(files: list[FileMap], root_name: str) -> str:
     total_symbols = sum(len(f.symbols) for f in files)
     lines = [f"# {root_name} - codebase map",
