@@ -51,12 +51,18 @@ python -m repomap.cli . --stats
 python -m repomap.cli . --file-stats
 # {"by_extension": {".py": {"files": 12, "lines": 980}, ".md": {"files": 3, "lines": 40}},
 #  "top_dirs": ["src", "tests"], "total_files": 21, "total_lines": 1320}
+
+# biggest files by byte size — first stop when a repo feels heavy
+python -m repomap.cli . --largest 5
+# {"largest": [{"path": "data/model.bin", "bytes": 5000}, ...]}
 ```
 
 `--file-stats` counts **every** file on disk (not just parseable modules),
 so it surfaces the repo's true shape — documentation, config, data and
 generated files included. Use it to spot repos that are mostly markdown,
-or directories that have quietly become dumping grounds.
+or directories that have quietly become dumping grounds. `--largest`
+ranks files by byte size, the fastest way to find vendored binaries,
+checked-in datasets or runaway logs.
 
 ## Example output
 
