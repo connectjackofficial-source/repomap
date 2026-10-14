@@ -46,7 +46,17 @@ python -m repomap.cli . --min-symbols 3
 # per-language file/symbol counts
 python -m repomap.cli . --stats
 # {"\".py\"": {"files": 12, "symbols": 87}, "\".ts\"": {"files": 4, "symbols": 19}}
+
+# physical repo shape: files and lines by extension (docs/config/data too)
+python -m repomap.cli . --file-stats
+# {"by_extension": {".py": {"files": 12, "lines": 980}, ".md": {"files": 3, "lines": 40}},
+#  "top_dirs": ["src", "tests"], "total_files": 21, "total_lines": 1320}
 ```
+
+`--file-stats` counts **every** file on disk (not just parseable modules),
+so it surfaces the repo's true shape — documentation, config, data and
+generated files included. Use it to spot repos that are mostly markdown,
+or directories that have quietly become dumping grounds.
 
 ## Example output
 
