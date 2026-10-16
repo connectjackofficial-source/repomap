@@ -15,6 +15,43 @@ from typing import Optional
 IGNORE_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv",
                "dist", "build", ".idea", ".vscode", "env"}
 
+# Text suffixes we will scan for markers (source + config, no binaries).
+TODO_EXTS = {".py", ".js", ".ts", ".jsx", ".tsx", ".c", ".h", ".cpp",
+             ".hpp", ".go", ".rs", ".java", ".sh", ".toml", ".yaml",
+             ".yml", ".json", ".md", ".html", ".css", ".sql"}
+
+
+def todo_scan(root: str | Path, patterns=("TODO", "FIXME", "HACK", "XXX"),
+              max_files: int = 2000) -> list:
+    """Scan source files for TODO/FIXME/HACK markers.
+
+    Returns [{"file": rel, "line": n, "marker": str, "text": str}] in
+    file order — a quick triage list for backlog grooming.
+    """
+    root = Path(root)
+    hits = []
+    scanned = 0
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.suffix not in TODO_EXTS:
+            continue
+        if any(part in IGNORE_DIRS for part in p.relative_to(root).parts):
+            continue
+        if scanned >= max_files:
+            break
+        scanned += 1
+        try:
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for i, ln in enumerate(lines, 1):
+            for marker in patterns:
+                if marker in ln:
+                    hits.append({"file": p.relative_to(root).as_posix(),
+                                 "line": i, "marker": marker,
+                                 "text": ln.strip()[:140]})
+                    break
+    return hits
+
 
 @dataclass
 class Symbol:
